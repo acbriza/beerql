@@ -82,6 +82,11 @@ class SCAgent():
              self.txn["received"][self.t] - demand
         return demand
 
+    def process_orders_source(self):
+        """process orders for first in the supply chain (prior to supplier)"""
+        demand = self.get_current_total_orders()
+        self.txn["forwarded"][self.t] = demand
+
     def post_order(self, demand, y, lead):
         if self.t + lead >= TIME_HORIZON
             self.orders[self.t + lead].append(demand+y)
@@ -98,8 +103,8 @@ class SupplyChain():
         self.agents.append(SCAgent(2, "Distributor", 12, [(0,4), (1,4)]))
         self.agents.append(SCAgent(3, "Manufacturer", 12, []))
         self.agents.append(SCAgent(4, "Supplier", 12, []))
-        self.agents.append(SCAgent(5, "Materials", 0, []))
-        self.NUM_AGENTS=len(self.agents)
+        self.agents.append(SCAgent(5, "Source", 0, []))
+        self.NUM_AGENTS = len(self.agents)
         # add demand values to retailer agent
         self.agents[0].add_order_list(self.data[DEMAND]) 
 
@@ -115,19 +120,21 @@ class SupplyChain():
             return
 
         # receive deliveries
-        for i in [4,3,2,1]:
-            delivery = self.agents[i].get_forwarded_deliveries()
-            self.agents[i-1].update_delivery(delivery)        
+        for i in [3,2,1,0]:
+            delivery = self.agents[i+1].get_forwarded_deliveries()
+            self.agents[i].update_delivery(delivery)  
         
         # process orders 
         lead = self.data[LEAD][self.t-1]
         y = self.policy[self.t-1]
-        for i in range(4): 
+        for i in [0,1,2,3]: 
             # process orders from downstream
             demand = self.agent[i].process_orders()
-            if demand > 0 and i < self.NUM_AGENTS-1:
+            if demand > 0:
                 # post order to upstream
                 self.agent[i+1].post_order(demand, y, lead)
+
+        self.agent[4].process_orders_source()
     
     def run(self, steps=TIME_HORIZON):
         for _ in range(steps):
