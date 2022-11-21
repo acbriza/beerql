@@ -52,34 +52,42 @@ class SCAgent():
         
     def process_orders(self):
         """ Assumes delivery has already been received
-            Returns demand received for processing upstream
             Updates current inventory as well as forwarded stocks
+            Returns demand received for processing upstream
         """
+        received = self.txn["received"][self.t]
+        prev_inv = self.txn["inventory"][self.t-1]
         demand = self.get_current_total_orders()
 
-        # compute stocks physically on-hand
-        onhand = self.txn["received"][self.t]
-        if self.txn["inventory"][self.t-1] > 0:
-            onhand + self.txn["inventory"][self.t-1]
-
-        if onhand - demand >= 0:
-            # we have enough physical stocks to make the full delivery
-            forwarded = demand
-        else:
-            # not enough stock
-            if onhand > 0:
-                # just deliver what we have on hand
-                forwarded = onhand
+        # Fulfill backorders
+        if prev_inv < 0:
+            if received >= abs(prev_inv):
+                # completely fulfill backorder
+                forwarded = prev_inv 
             else:
-                # no stock available; no deliveries can be made
-                forwarded = 0
+                # partially fulfill backorder with received goods
+                forwarded = received
+        else:
+            # we have not forwarded anything yet 
+            forwarded = 0
+
+        onhand = received + prev_inv        
+
+        if onhand > 0 and demand > 0:
+            # we can also serve the new demand after having fulfilled back order, if any
+            if onhand - demand >= 0:
+                # we have enough physical stocks to make the full delivery
+                forwarded += demand
+            else:
+                # not enough stock; just deliver what we have on hand
+                forwarded += onhand
 
         # set forwarded orders
         self.txn["forwarded"][self.t] += forwarded
-
-        # update inventory for this time step; this takes care of backorders
-        self.txn["inventory"][self.t] = self.txn["inventory"][self.t-1] + \
-             self.txn["received"][self.t] - demand
+ 
+        # update inventory for this time step
+        self.txn["inventory"][self.t] = onhand - demand
+    
         return demand
 
     def process_orders_source(self):
