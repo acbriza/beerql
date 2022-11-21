@@ -125,6 +125,19 @@ class SupplyChain():
         for agent in self.agents:
             print(agent.info())
 
+    def get_report(self, steps):
+        report = {}
+        for agent in self.agents:
+            report[agent.name] = {
+            "received": list(agent.txn["received"].values())[:steps+1],
+            "inventory": list(agent.txn["received"].values())[:steps+1],
+            "policy": list(agent.txn["policy"].values())[:steps+1],
+            "lead": list(agent.txn["lead"].values())[:steps+1],
+            "orders": list(agent.txn["orders"].values())[:steps+1],
+            "forwarded": list(agent.txn["forwarded"].values())[:steps+1],
+        }
+        return report
+
     def step(self, verbosity=0):
         self.t += 1
         if self.t > TIME_HORIZON:
@@ -154,3 +167,4 @@ class SupplyChain():
     def run(self, steps=TIME_HORIZON):
         for _ in range(steps):
             self.step(verbosity=1)
+        return self.get_report(steps)
