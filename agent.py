@@ -1,24 +1,33 @@
 import sys
 
-from data import DEMAND, LEAD
+from data import DEMAND, LEAD, TIME_HORIZON
 
 class SCAgent():
 
+    # def append_order(self, demand, lead):
+    #     "self.orders refer to future orders; index start from 0 (same week as time t)"
+    #     while lead > len(self.orders):
+    #         self.orders.append([])
+    #     self.orders[lead-1].append(demand)
+
     def append_order(self, demand, lead):
-        while lead > len(self.orders):
-            self.orders.append([])
-        self.orders[lead-1].append(demand)
+        if self.t+lead <= TIME_HORIZON:            
+            self.orders[self.t+lead].append(demand)
+
+    def get_cost = lambda x: x if x > 0 else -2*x
 
     def __init__(self, index, name, init_inv=0, init_orders=[]):    
         """ init_inv - int:  initial inventory
             orders - tuple of (order size, lead): orders in transit
         """
+        self.t = 0
         self.name = name
         self.index = index
         self.inv = init_inv
-        self.orders = []
+        self.orders = {t:[] for t in range(1, TIME_HORIZON+1)}
         for demand,lead in init_orders :
             self.append_order(demand, lead)
+
         self.inventory = [init_inv, ]
         self.delivery = [-sys.maxsize-1]
         self.demand = [-sys.maxsize-1]
@@ -41,16 +50,16 @@ class SCAgent():
             returns the 
 
         """
+        self.t += 1
+
+        # place an order (do this first so that 0-lead orders can already be received)
+        self.append_order(demand+y, lead)            
+
         # receive orders
-        if self.orders:
-            delivered_order = sum(self.orders.pop(0)) 
-        else:
-            delivered_order = 0        
+        delivered_order = sum(self.orders[self.t]) 
         # satisfy downstream
         self.inv = self.inv + delivered_order - demand
-        # place an order
-        self.append_order(demand+y, lead)            
-        # this delivered_order becomes a demand for the upstream
+        # delivered_order becomes a demand for the upstream
         upstream_demand = delivered_order
 
         # update statistics
@@ -97,7 +106,6 @@ class SupplyChain():
         "If steps is None, run everything"
         time_steps = range(steps) if steps else range(self.time_horizon) 
         for t in time_steps:
-            print(t)
             self.step()
 
         report ={}
