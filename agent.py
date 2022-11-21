@@ -30,8 +30,10 @@ class SCAgent():
         for t, order in forwarded_orders:
             self.txn["forwarded"][t] += order
 
-    def step(self):
+    def step(self, policy, lead):
         self.t += 1
+        self.txn["policy"][self.t] = policy
+        self.txn["lead"][self.t] = lead
 
     def add_order_list(self, order_list):
         assert len(order_list) == TIME_HORIZON
@@ -67,7 +69,7 @@ class SCAgent():
         if prev_inv < 0:
             if received >= abs(prev_inv):
                 # completely fulfill backorder
-                forwarded = prev_inv 
+                forwarded = abs(prev_inv)
             else:
                 # partially fulfill backorder with received goods
                 forwarded = received
@@ -99,9 +101,11 @@ class SCAgent():
         demand = self.get_current_total_orders()
         self.txn["forwarded"][self.t] = demand
 
-    def post_order(self, demand, y, lead):
-        if self.t + lead >= TIME_HORIZON:
-            self.orders[self.t + lead].append(demand+y)
+    def post_order(self, demand, policy, lead):
+        y = policy
+        idx = self.t + lead
+        if idx <= TIME_HORIZON:
+            self.txn["orders"][idx].append(demand+y)
 
 
 class SupplyChain():
@@ -130,7 +134,7 @@ class SupplyChain():
         for agent in self.agents:
             report[agent.name] = {
             "received": list(agent.txn["received"].values())[:steps+1],
-            "inventory": list(agent.txn["received"].values())[:steps+1],
+            "inventory": list(agent.txn["inventory"].values())[:steps+1],
             "policy": list(agent.txn["policy"].values())[:steps+1],
             "lead": list(agent.txn["lead"].values())[:steps+1],
             "orders": list(agent.txn["orders"].values())[:steps+1],
@@ -144,8 +148,12 @@ class SupplyChain():
             print('Finished epoch')
             return
 
+        # get lead and policy data
+        lead = self.data[LEAD][self.t-1]        
         for agent in self.agents:
-            agent.step()
+            policy = self.policy[agent.index][self.t-1]
+            #print(lead, policy)
+            agent.step(policy, lead)
 
         # receive deliveries
         for i in [3,2,1,0]:
@@ -153,14 +161,14 @@ class SupplyChain():
             self.agents[i].receive_delivery(delivery)  
         
         # process orders 
-        lead = self.data[LEAD][self.t-1]
-        y = self.policy[self.t-1]
         for i in [0,1,2,3]: 
             # process orders from downstream
             demand = self.agents[i].process_orders()
             if demand > 0:
                 # post order to upstream
-                self.agents[i+1].post_order(demand, y, lead)
+                policy = self.agents[i].txn["policy"][self.t]
+                lead = self.agents[i].txn["lead"][self.t]
+                self.agents[i+1].post_order(demand, policy, lead)
 
         self.agents[4].process_orders_source()
     
