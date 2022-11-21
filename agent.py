@@ -5,7 +5,7 @@ import numpy as np
 
 class SCAgent():
 
-    def get_cost = lambda x: x if x > 0 else -2*x
+    get_cost = lambda x: x if x > 0 else -2*x
 
     def __init__(self, index, name, init_inventory=0, forwarded_orders=[]):
         """ init_inv - int:  initial inventory
@@ -19,7 +19,7 @@ class SCAgent():
             "inventory": {t:0 for t in range(TIME_HORIZON+1)},
             "policy": {t:0 for t in range(TIME_HORIZON+1)},
             "lead": {t:0 for t in range(TIME_HORIZON+1)},
-            "orders" : {t:[] for t in range(0, TIME_HORIZON+1)}
+            "orders" : {t:[] for t in range(0, TIME_HORIZON+1)},
             "forwarded": {t:0 for t in range(TIME_HORIZON+1)},
         }
 
@@ -29,6 +29,9 @@ class SCAgent():
         self.txn["lead"][0] = np.NaN
         for t, order in forwarded_orders:
             self.txn["forwarded"][t] += order
+
+    def step(self):
+        self.t += 1
 
     def add_order_list(self, order_list):
         assert len(order_list) == TIME_HORIZON
@@ -41,14 +44,15 @@ class SCAgent():
 
     def get_forwarded_deliveries(self):
         "Return forwarded items from previous time step"
-        assert self.t-1 < 0, f"Invalid index in function get_forwarded_deliveries: {t-1}"
+        assert self.t-1 >= 0, f"Invalid index in function get_forwarded_deliveries: {self.t-1}"
         return self.txn["forwarded"][self.t-1]
 
     def get_current_total_orders(self):
-        return sum(self.txn.orders[self.t]) if self.orders else 0
+        orders = self.txn["orders"][self.t]
+        return sum(orders) if orders else 0
 
     def receive_delivery(self, delivery):
-        self.txn["delivery"][self.t] += delivery
+        self.txn["received"][self.t] += delivery
         
     def process_orders(self):
         """ Assumes delivery has already been received
@@ -96,7 +100,7 @@ class SCAgent():
         self.txn["forwarded"][self.t] = demand
 
     def post_order(self, demand, y, lead):
-        if self.t + lead >= TIME_HORIZON
+        if self.t + lead >= TIME_HORIZON:
             self.orders[self.t + lead].append(demand+y)
 
 
@@ -127,22 +131,25 @@ class SupplyChain():
             print('Finished epoch')
             return
 
+        for agent in self.agents:
+            agent.step()
+
         # receive deliveries
         for i in [3,2,1,0]:
             delivery = self.agents[i+1].get_forwarded_deliveries()
-            self.agents[i].update_delivery(delivery)  
+            self.agents[i].receive_delivery(delivery)  
         
         # process orders 
         lead = self.data[LEAD][self.t-1]
         y = self.policy[self.t-1]
         for i in [0,1,2,3]: 
             # process orders from downstream
-            demand = self.agent[i].process_orders()
+            demand = self.agents[i].process_orders()
             if demand > 0:
                 # post order to upstream
-                self.agent[i+1].post_order(demand, y, lead)
+                self.agents[i+1].post_order(demand, y, lead)
 
-        self.agent[4].process_orders_source()
+        self.agents[4].process_orders_source()
     
     def run(self, steps=TIME_HORIZON):
         for _ in range(steps):
