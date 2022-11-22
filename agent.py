@@ -2,6 +2,7 @@ import sys
 
 from data import DEMAND, LEAD, TIME_HORIZON
 import numpy as np
+from itertools import product
 
 class SCAgent():
 
@@ -125,6 +126,12 @@ class SupplyChain():
         # add demand values to retailer agent
         self.agents[0].add_order_list(self.data[DEMAND]) 
 
+    action_space_tuples = list(product((0,1,2,3), repeat=4))
+
+    # define a dictionary for mapping a tuple to an index in the action vector
+    def iA(self, action_tuple):
+        return self.action_space_tuples.index(action_tuple)
+
     def encode(self, inv):
         if inv < -6:
             return 1
@@ -231,6 +238,11 @@ class SupplyChain():
         self.agents[4].process_orders_source()
 
     def rl_env_step(self, action):
+        "action here is an index"
+
+        # convert action index parameter to a 4-tuple
+        action = self.action_space_tuples[action]
+        
         done = False
         self.t += 1
 
