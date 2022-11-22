@@ -27,9 +27,9 @@ def make_epsilon_greedy_policy(Q, epsilon, nA):
     
     """
     def policy_fn(observation):
-        A = np.ones(nA, dtype=float) * epsilon / nA
-        best_action = np.argmax(Q[observation])
-        A[best_action] += (1.0 - epsilon)
+        A = np.ones(nA, dtype=float) * epsilon / nA #. set probility for other actions as epsilon/nA 
+        best_action = np.argmax(Q[observation]) #. observation is a 4-tuple 
+        A[best_action] += (1.0 - epsilon) #. set prob for best action as 1-epsilon
         return A
     return policy_fn
 
@@ -79,7 +79,7 @@ def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon=0.1):
             # Take a step
             #. follow epsilon-greedy policy (behaviour policy mu)
             action_probs = policy(state)
-            action = np.random.choice(np.arange(len(action_probs)), p=action_probs)
+            action = np.random.choice(np.arange(len(action_probs)), p=action_probs) #.action here is an index
             next_state, reward, done, _ = env.step(action)
 
             # Update statistics
