@@ -5,8 +5,6 @@ import numpy as np
 
 class SCAgent():
 
-    get_cost = lambda x: x if x > 0 else -2*x
-
     def __init__(self, index, name, init_inventory=0, forwarded_orders=[]):
         """ init_inv - int:  initial inventory
             forwarded_orders - tuple of (time_step, order size)
@@ -120,6 +118,8 @@ class SupplyChain():
         self.agents.append(SCAgent(3, "Manufacturer", 12, []))
         self.agents.append(SCAgent(4, "Supplier", 12, []))
         self.agents.append(SCAgent(5, "Source", 0, []))
+        self.cost = {t:0 for t in range(TIME_HORIZON+1)}
+        self.cost[0] = np.NaN
         self.NUM_AGENTS = len(self.agents)
         # add demand values to retailer agent
         self.agents[0].add_order_list(self.data[DEMAND]) 
@@ -140,9 +140,24 @@ class SupplyChain():
             "orders": list(agent.txn["orders"].values())[:steps+1],
             "forwarded": list(agent.txn["forwarded"].values())[:steps+1],
         }
+        report["Cost"] = {"cost": list(self.cost.values())[:steps+1],}
         return report
 
+    def update_cost(self):
+        "updates cost dictionary"
+        # if self.t == 0:
+        #     # no need to compute cost for time step 0
+        #     return
+        assert self.t <= TIME_HORIZON, f"Can't compute cost for {self.t}"
+        get_cost = lambda x: x if x > 0 else -2*x
+        cost  = 0
+        for i in [0,1,2,3]: #"Retailer",  "Distributor", "Manufacturer", "Supplier"
+            cost += get_cost(self.agents[i].txn["inventory"][self.t])
+        self.cost[self.t] = cost
+
     def step(self, verbosity=0):
+        # compute cost before updating the time step
+        self.update_cost()
         self.t += 1
         if self.t > TIME_HORIZON:
             print('Finished epoch')
