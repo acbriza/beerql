@@ -109,7 +109,7 @@ class SCAgent():
 class SupplyChain():
             
     def __init__(self, data, policy):
-        self.t = 0
+        self.t = 0        
         self.data = data
         self.policy = policy
         self.agents = []
@@ -118,13 +118,14 @@ class SupplyChain():
         self.agents.append(SCAgent(3, "Manufacturer", 12, []))
         self.agents.append(SCAgent(4, "Supplier", 12, []))
         self.agents.append(SCAgent(5, "Source", 0, []))
+        total_cost = 0
         self.cost = {t:0 for t in range(TIME_HORIZON+1)}
         self.cost[0] = np.NaN
         self.NUM_AGENTS = len(self.agents)
         # add demand values to retailer agent
         self.agents[0].add_order_list(self.data[DEMAND]) 
 
-    def encode(inv):
+    def encode(self, inv):
         if inv < -6:
             return 1
         elif inv < -3:
@@ -193,6 +194,10 @@ class SupplyChain():
         self.cost[self.t] = cost
         return cost
 
+    def compute_cost(self):
+        "computes accumulated cost up to current time step"
+        return sum(list(self.cost.values()))
+
     def simulation_step(self, verbosity=0):
         # compute cost before updating the time step
         self.update_cost()
@@ -259,8 +264,11 @@ class SupplyChain():
         ]
 
         # compute cost before 
-        reward = self.update_cost()
-    
+        cost = self.update_cost()
+        self.total_cost += cost
+
+        reward = -1*cost
+
         if self.t+1 > TIME_HORIZON:
             done = True
             print('Finished epoch')
