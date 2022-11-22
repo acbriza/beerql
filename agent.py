@@ -124,6 +124,26 @@ class SupplyChain():
         # add demand values to retailer agent
         self.agents[0].add_order_list(self.data[DEMAND]) 
 
+    def encode(inv):
+        if inv < -6:
+            return 1
+        elif inv < -3:
+            return 2
+        elif inv < 0:
+            return 3
+        elif inv < 3:
+            return 4
+        elif inv < 6:
+            return 5
+        elif inv < 10:
+            return 6
+        elif inv < 15:
+            return 7
+        elif inv < 20:
+            return 8
+        else:
+            return 9        
+
     def print_info(self):
         print(f"t:{self.t} ", end="")
         for agent in self.agents:
@@ -143,6 +163,23 @@ class SupplyChain():
         report["Cost"] = {"cost": list(self.cost.values())[:steps+1],}
         return report
 
+    def get_rl_env_step_info(self, msg=""):
+        info = {}
+        info["Timestep"] = self.t
+        info["Cost"] = self.cost[self.t]
+        info["Msg"] = msg
+        info["Agents"] = {}
+        for agent in self.agents:
+            info["Agents"][agent.name] = {
+            "received": agent.txn["received"][self.t],
+            "inventory": agent.txn["inventory"][self.t],
+            "policy": agent.txn["policy"][self.t],
+            "lead": agent.txn["lead"][self.t],
+            "orders": agent.txn["orders"][self.t],
+            "forwarded": agent.txn["forwarded"][self.t],
+        }        
+        return info
+
     def update_cost(self):
         "updates cost dictionary"
         # if self.t == 0:
@@ -154,8 +191,9 @@ class SupplyChain():
         for i in [0,1,2,3]: #"Retailer",  "Distributor", "Manufacturer", "Supplier"
             cost += get_cost(self.agents[i].txn["inventory"][self.t])
         self.cost[self.t] = cost
+        return cost
 
-    def step(self, verbosity=0):
+    def simulation_step(self, verbosity=0):
         # compute cost before updating the time step
         self.update_cost()
         self.t += 1
@@ -186,7 +224,52 @@ class SupplyChain():
                 self.agents[i+1].post_order(demand, policy, lead)
 
         self.agents[4].process_orders_source()
+
+    def rl_env_step(self, action):
+        done = False
+        self.t += 1
+
+        # get lead and policy data
+        lead = self.data[LEAD][self.t-1] # data's index start at zero while t starts at 1
+        for i,agent in enumerate(self.agents):
+            policy = action[i]
+            agent.step(policy, lead)
+
+        # receive deliveries
+        for i in [3,2,1,0]:
+            delivery = self.agents[i+1].get_forwarded_deliveries()
+            self.agents[i].receive_delivery(delivery)  
+        
+        # process orders 
+        for i in [0,1,2,3]: 
+            # process orders from downstream
+            demand = self.agents[i].process_orders()
+            if demand > 0:
+                # post order to upstream
+                policy = action[i]
+                self.agents[i+1].post_order(demand, policy, lead)
+
+        self.agents[4].process_orders_source()
+
+        # encode new state
+        state = [
+            self.encode(
+                self.agents[i].txn["inventory"][self.t]
+             ) for i in [0,1,2,3]
+        ]
+
+        # compute cost before 
+        reward = self.update_cost()
     
+        if self.t+1 > TIME_HORIZON:
+            done = True
+            print('Finished epoch')
+        
+        info = self.get_rl_env_step_info()
+            
+        return state, reward, done, info
+            
+
     def run(self, steps=TIME_HORIZON):
         for _ in range(steps):
             self.step(verbosity=1)
