@@ -1,3 +1,5 @@
+import pandas as pd
+
 DEMAND, LEAD  = 0, 1
 MAIN, PROB1, PROB2, PROB3 = 0, 1, 2, 3
 TIME_HORIZON = 35
@@ -20,4 +22,29 @@ data = {
     }
 }
 
-PASS_ORDER = [0] * 35
+PASS_ORDER_SINGLE = [0] * 35
+
+PASS_ORDER = {
+    1: [0] * 35,
+    2: [0] * 35,
+    3: [0] * 35,
+    4: [0] * 35,
+    5: [0] * 35,
+}
+
+RLDummy = {
+    1: [3,3,1,1,2] + [0]*30,
+    2: [1,0,0,0,1] + [0]*30,
+    3: [3,2,0,2,1] + [0]*30,
+    4: [3,0,2,0,0] + [0]*30,
+    5: [0]*35,
+}
+
+df = pd.read_excel("Cha08Solution.xlsx")
+RLCha08 = {
+    1: list(df.Retailer.values),
+    2: list(df.Distributor.values),
+    3: list(df.Manufacturer.values),
+    4: list(df.Supplier.values),
+    5: [0]*35,
+}
