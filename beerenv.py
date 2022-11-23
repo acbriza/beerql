@@ -8,7 +8,7 @@ from agent import SupplyChain
 
 class BeerGameEnv(Env):
 
-    def __init__(self, data):
+    def __init__(self):
         
         # observations space coded inventory levels
         self.observation_space = spaces.Tuple(
@@ -21,28 +21,13 @@ class BeerGameEnv(Env):
         # number of actions is 4^4
         self.action_space = spaces.Discrete(256) 
 
-        # comment out vector form of actions for the mean time
-        # # policy (y) values in [0,1,2,3]
-        # self.action_space = spaces.Tuple(
-        #     (spaces.Discrete(4, start=0), 
-        #      spaces.Discrete(4, start=0), 
-        #      spaces.Discrete(4, start=0), 
-        #      spaces.Discrete(4, start=0)) 
-        # )
 
-        # # number of actions is 4^4
-        # na = len(self.action_space)
-        # self.nA = pow(na,na)
-
+    def custom_init(self, data):
         self.sc = SupplyChain(data)
 
         # initial state values for all levels in supply chain is 12
-        si = self.sc.encode(12)
-
         # current state 
-        self.state = (si, si, si, si)
-    
-
+        self.state = self.sc.encode_tuple((12,12,12,12))
 
     def step(self, action):
         assert self.action_space.contains(action)
@@ -57,10 +42,8 @@ class BeerGameEnv(Env):
         self.sc.reset()
 
         # initial state values for all levels in supply chain is 12
-        si = self.sc.encode(12)
-
         # current state 
-        self.state = (si, si, si, si)
+        self.state = self.sc.encode_tuple((12,12,12,12))
         return self.state
 
     def render(self, action, reward, obs):
