@@ -6,13 +6,8 @@ from itertools import product
 
 class SCAgent():
 
-    def __init__(self, index, name, init_inventory=0, forwarded_orders=[]):
-        """ init_inv - int:  initial inventory
-            forwarded_orders - tuple of (time_step, order size)
-        """
+    def reset(self):
         self.t = 0
-        self.name = name
-        self.index = index
         self.txn = {
             "received": {t:0 for t in range(TIME_HORIZON+1)},
             "inventory": {t:0 for t in range(TIME_HORIZON+1)},
@@ -23,11 +18,22 @@ class SCAgent():
         }
 
         # set initial values        
-        self.txn["inventory"][0] = init_inventory
+        self.txn["inventory"][0] = self.init_inventory
         self.txn["policy"][0] = np.NaN
         self.txn["lead"][0] = np.NaN
-        for t, order in forwarded_orders:
+        for t, order in self.init_forwarded_orders:
             self.txn["forwarded"][t] += order
+
+    def __init__(self, index, name, init_inventory=0, init_forwarded_orders=[]):
+        """ init_inv - int:  initial inventory
+            init_forwarded_orders - tuple of (time_step, order size)
+        """
+        self.name = name
+        self.index = index
+        self.init_inventory = init_inventory
+        self.init_forwarded_orders = init_forwarded_orders
+        self.txn = {}
+        self.reset()
 
     def step(self, policy, lead):
         self.t += 1
@@ -109,8 +115,17 @@ class SCAgent():
 
 class SupplyChain():
             
-    def __init__(self, data, policy):
+    def reset(self):
         self.t = 0        
+        self.total_cost = 0
+        self.cost = {t:0 for t in range(TIME_HORIZON+1)}
+        self.cost[0] = np.NaN
+        for agent in self.agents:
+            agent.reset()        
+        # add demand values to retailer agent
+        self.agents[0].add_order_list(self.data[DEMAND]) 
+
+    def __init__(self, data, policy):
         self.data = data
         self.policy = policy
         self.agents = []
@@ -119,14 +134,10 @@ class SupplyChain():
         self.agents.append(SCAgent(3, "Manufacturer", 12, []))
         self.agents.append(SCAgent(4, "Supplier", 12, []))
         self.agents.append(SCAgent(5, "Source", 0, []))
-        total_cost = 0
-        self.cost = {t:0 for t in range(TIME_HORIZON+1)}
-        self.cost[0] = np.NaN
-        self.NUM_AGENTS = len(self.agents)
-        # add demand values to retailer agent
-        self.agents[0].add_order_list(self.data[DEMAND]) 
+        self.n_ACTING_AGENTS = len(self.agents)-1 # number of agents minus Source
+        self.reset()
 
-    action_space_tuples = list(product((0,1,2,3), repeat=4))
+    action_space_tuples = tuple(product((0,1,2,3), repeat=4))
 
     # define a dictionary for mapping a tuple to an index in the action vector
     def iA(self, action_tuple):
@@ -248,8 +259,8 @@ class SupplyChain():
 
         # get lead and policy data
         lead = self.data[LEAD][self.t-1] # data's index start at zero while t starts at 1
-        for i,agent in enumerate(self.agents):
-            policy = action[i]
+        for i,agent in enumerate(self.agents): 
+            policy = action[i] if i<self.n_ACTING_AGENTS else np.NaN
             agent.step(policy, lead)
 
         # receive deliveries
@@ -269,21 +280,21 @@ class SupplyChain():
         self.agents[4].process_orders_source()
 
         # encode new state
-        state = [
+        state = (
             self.encode(
                 self.agents[i].txn["inventory"][self.t]
              ) for i in [0,1,2,3]
-        ]
+        )
+        state = tuple(state)
 
         # compute cost before 
         cost = self.update_cost()
         self.total_cost += cost
 
-        reward = -1*cost
+        reward = cost
 
         if self.t+1 > TIME_HORIZON:
             done = True
-            print('Finished epoch')
         
         info = self.get_rl_env_step_info()
             
