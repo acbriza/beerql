@@ -27,13 +27,13 @@ def make_epsilon_greedy_policy(Q, epsilon, nA):
     
     """
     def policy_fn(observation):
-        A = np.ones(nA, dtype=float) * epsilon / nA #. set probility for other actions as epsilon/nA 
+        A = np.ones(nA, dtype=float) * epsilon / nA #. set probability for other actions as epsilon/nA 
         best_action = np.argmin(Q[observation]) #. observation is a 4-tuple 
         A[best_action] += (1.0 - epsilon) #. set prob for best action as 1-epsilon
         return A
     return policy_fn
 
-def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon_range=(0.98, 0.1)):
+def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon_range=(0.98, 0.1), verbosity=2):
     """
     Q-Learning algorithm: Off-policy TD control. Finds the optimal greedy policy
     while following an epsilon-greedy policy
@@ -69,11 +69,12 @@ def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon_range=
 
         # Print out which episode we're on, useful for debugging.
         if (i_episode + 1) % 100 == 0:
-            print(f"Episode: {i_episode + 1}/{num_episodes}; \
-                    Prev Total Cost: {stats.episode_rewards[i_episode-1]}; \
-                    epsilon: {epsilon:.2f}."
-                ) #\r#end=""
-            sys.stdout.flush()
+            if verbosity==1:
+                print("\rEpisode {} ".format(i_episode + 1), end="")
+                sys.stdout.flush()
+            elif verbosity==2:                
+                print(f"\rEpisode {i_episode + 1}/{num_episodes}: Cost {stats.episode_rewards[i_episode-1]} epsilon {epsilon:.2f}",end="")
+                sys.stdout.flush()
         
         # Reset the environment and pick the first action
         state = env.reset()
