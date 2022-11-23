@@ -6,6 +6,7 @@ import pandas as pd
 
 from beerenv import BeerGameEnv
 from ql import q_learning
+import plotting 
 
 def simulation():
     sc = SupplyChain(data=data[MAIN], policy=RL)
@@ -18,8 +19,10 @@ def simulation():
 
 def rl_train():
     env = BeerGameEnv()
-    Q, stats = q_learning(env, num_episodes=2000, alpha=0.17)
+    Q, stats = q_learning(env, num_episodes=1000, alpha=0.17)
     return Q, stats
 
 
 Q, stats = rl_train()
+
+plotting.plot_rewards(stats)
