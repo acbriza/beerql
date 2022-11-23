@@ -54,7 +54,8 @@ class BeerGameEnv(Env):
 
     def reset(self):
         # restore to initial values
-        
+        self.sc.reset()
+
         # initial state values for all levels in supply chain is 12
         si = self.sc.encode(12)
 
@@ -62,10 +63,8 @@ class BeerGameEnv(Env):
         self.state = (si, si, si, si)
 
     def render(self, action, reward, obs):
-        print("=============================================================================")
-        print(f"t: {self.sc.t};  Action: {self.sc.action_space_tuples[action]}")
-        print(f"Reward: {reward}; Total rewards: {self.sc.total_cost}")
-        print(f"S': {obs}")
-
-        # print(f"Action : {action}")
-        # print(f"Total Reward : {self.collected_reward}")
+        pass
+        # print("=============================================================================")
+        # print(f"t: {self.sc.t};  Action: {self.sc.action_space_tuples[action]}")
+        # print(f"Reward: {reward}; Total rewards: {self.sc.total_cost}")
+        # print(f"S': {obs}")
