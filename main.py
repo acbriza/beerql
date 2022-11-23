@@ -22,7 +22,9 @@ def rl_train():
     Q, stats = q_learning(env, num_episodes=1000, alpha=0.17)
     return Q, stats
 
+def passorder_run():
+    sc = SupplyChain(data=data[MAIN], policy=PASS_ORDER)
+    dfpo = sc.run()
 
-Q, stats = rl_train()
-
-plotting.plot_rewards(stats)
+passorder_run()
+# Q, stats = rl_train()
