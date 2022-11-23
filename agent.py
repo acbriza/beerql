@@ -145,7 +145,7 @@ class SupplyChain():
     def iA(self, action_tuple):
         return self.action_space_tuples.index(action_tuple)
 
-    def encode(self, inv):
+    def encode_value(self, inv):
         if inv < -6:
             return 1
         elif inv < -3:
@@ -163,7 +163,10 @@ class SupplyChain():
         elif inv < 20:
             return 8
         else:
-            return 9        
+            return 9
+
+    def encode_tuple(self, inv_tuple):
+        return tuple(self.encode_value(v) for v in inv_tuple)
 
     def print_info(self):
         print(f"t:{self.t} ", end="")
@@ -296,7 +299,7 @@ class SupplyChain():
 
         # encode new state
         state = (
-            self.encode(
+            self.encode_value(
                 self.agents[i].txn["inventory"][self.t]
              ) for i in [0,1,2,3]
         )
