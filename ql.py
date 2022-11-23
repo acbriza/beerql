@@ -63,18 +63,10 @@ def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon_range=
     # make a list of epsilons linearly divided to the number of episodes
     epsilons = np.linspace(epsilon_range[0], epsilon_range[1], num_episodes)
     for i_episode in range(num_episodes):
+
         # The policy we're following
         epsilon = epsilons[i_episode]
         policy = make_epsilon_greedy_policy(Q, epsilon, env.action_space.n)
-
-        # Print out which episode we're on, useful for debugging.
-        if (i_episode + 1) % 100 == 0:
-            if verbosity==1:
-                print("\rEpisode {} ".format(i_episode + 1), end="")
-                sys.stdout.flush()
-            elif verbosity==2:                
-                print(f"\rEpisode {i_episode + 1}/{num_episodes}: Cost {stats.episode_rewards[i_episode-1]} epsilon {epsilon:.2f}",end="")
-                sys.stdout.flush()
         
         # Reset the environment and pick the first action
         state = env.reset()
@@ -106,4 +98,13 @@ def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon_range=
                 
             state = next_state
     
+        # Print out which episode results
+        if (i_episode+1) % 100 == 0:
+            if verbosity==1:
+                print("\rEpisode {} ".format(i_episode+1), end="")
+                sys.stdout.flush()
+            elif verbosity==2:                
+                print(f"\rEpisode {i_episode+1}/{num_episodes}: Cost {stats.episode_rewards[i_episode]} epsilon {epsilon:.2f}",end="")
+                sys.stdout.flush()
+
     return Q, stats
