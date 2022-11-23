@@ -10,7 +10,7 @@ import plotting
 
 def simulation():
     sc = SupplyChain(data=data[MAIN], policy=RL)
-    report = sc.run(5)
+    report = sc.simulation_run(5)
 
     df = pd.DataFrame.from_dict(report, orient="index").stack().to_frame()
     # to break out the lists into columns
@@ -24,7 +24,7 @@ def rl_train():
 
 def passorder_run():
     sc = SupplyChain(data=data[MAIN], policy=PASS_ORDER)
-    dfpo = sc.run()
+    dfpo = sc.simulation_run()
 
 passorder_run()
 # Q, stats = rl_train()
