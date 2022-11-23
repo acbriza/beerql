@@ -11,6 +11,8 @@ import  matplotlib
 
 matplotlib.style.use('ggplot')
 
+""" Code lifted and adapted from https://github.com/dennybritz/reinforcement-learning
+"""
 
 def make_epsilon_greedy_policy(Q, epsilon, nA):
     """
@@ -121,6 +123,8 @@ def ql_get_policy(env, Q):
     
     Returns:
         policy: A dictionary containing list of actions per agent
+    Note:
+        This is not in the dennybritz github repo
     """
 
     action_space_tuples = tuple(product((0,1,2,3), repeat=4))
@@ -132,7 +136,7 @@ def ql_get_policy(env, Q):
         4: [],
         5: [],
     }
-    
+
     # Reset the environment and pick the first action
     state = env.reset()
     for t in itertools.count():   

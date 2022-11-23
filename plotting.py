@@ -5,6 +5,9 @@ from collections import namedtuple
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+""" Code lifted and adapted from https://github.com/dennybritz/reinforcement-learning
+"""
+
 EpisodeStats = namedtuple("Stats",["episode_lengths", "episode_rewards"])
 
 def plot_cost_to_go_mountain_car(env, estimator, num_tiles=20):
@@ -97,8 +100,9 @@ def plot_episode_stats(stats, smoothing_window=10, noshow=False):
 
     return fig1, fig2, fig3
 
-#. just plot rewards
 def plot_rewards(stats, smoothing_window=10):
+    """ Just plot rewards. Lifted  from function plot_episode_stats above
+    """
     # Plot the episode reward over time
     fig2 = plt.figure(figsize=(10,5))
     rewards_smoothed = pd.Series(stats.episode_rewards).rolling(smoothing_window, min_periods=smoothing_window).mean()
