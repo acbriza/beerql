@@ -3,6 +3,7 @@ import matplotlib
 import numpy as np
 import sys
 
+from itertools import product
 from collections import defaultdict
 
 import plotting #from lib 
@@ -109,3 +110,41 @@ def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon_range=
                 sys.stdout.flush()
 
     return Q, stats
+
+
+def ql_get_policy(env, Q):
+    """    
+    Args:
+        env: OpenAI environment.
+        num_episodes: Number of episodes to run for.
+        Q is the optimal action-value function, a dictionary mapping state -> action values.
+    
+    Returns:
+        policy: A dictionary containing list of actions per agent
+    """
+
+    action_space_tuples = tuple(product((0,1,2,3), repeat=4))
+
+    policy = {}
+    # Reset the environment and pick the first action
+    state = env.reset()
+    for t in itertools.count():   
+
+        # Take a step following the policy in Q-Table
+        action = np.argmax(Q[state])
+
+        #convert action (integer 1..256) to a 4-tuple
+        action_tuple = action_space_tuples[action]
+        policy[1].append(action_tuple[0])
+        policy[2].append(action_tuple[1])
+        policy[3].append(action_tuple[2])
+        policy[4].append(action_tuple[3])
+        policy[5].append(0)
+
+        # Go to the next state
+        state, reward, done, _ = env.step(action)
+        
+        if done:
+            break
+
+    return policy
