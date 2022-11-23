@@ -126,7 +126,8 @@ class SupplyChain():
         # add demand values to retailer agent
         self.agents[0].add_order_list(self.data[DEMAND]) 
 
-    def __init__(self, data, policy):
+    def __init__(self, data, policy=None):
+        "policy is used for simulations;  for RL training it is set to None"
         self.data = data
         self.policy = policy
         self.agents = []
