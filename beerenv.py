@@ -8,7 +8,7 @@ from agent import SupplyChain
 
 class BeerGameEnv(Env):
 
-    def __init__(self):
+    def __init__(self, data):
         
         # observations space coded inventory levels
         self.observation_space = spaces.Tuple(
@@ -34,7 +34,7 @@ class BeerGameEnv(Env):
         # na = len(self.action_space)
         # self.nA = pow(na,na)
 
-        self.sc = SupplyChain(data=data[MAIN], policy=RLCha08)
+        self.sc = SupplyChain(data)
 
         # initial state values for all levels in supply chain is 12
         si = self.sc.encode(12)
