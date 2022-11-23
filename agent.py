@@ -217,18 +217,11 @@ class SupplyChain():
         return sum(list(self.cost.values()))
 
     def simulation_step(self, verbosity=0):
-        # compute cost before updating the time step
-        self.update_cost()
-        self.t += 1
-        if self.t > TIME_HORIZON:
-            print('Finished epoch')
-            return
 
         # get lead and policy data
         lead = self.data[LEAD][self.t-1]        
         for agent in self.agents:
             policy = self.policy[agent.index][self.t-1]
-            #print(lead, policy)
             agent.step(policy, lead)
 
         # receive deliveries
@@ -243,10 +236,17 @@ class SupplyChain():
             if demand > 0:
                 # post order to upstream
                 policy = self.agents[i].txn["policy"][self.t]
-                lead = self.agents[i].txn["lead"][self.t]
                 self.agents[i+1].post_order(demand, policy, lead)
 
         self.agents[4].process_orders_source()
+
+        # compute cost 
+        cost = self.update_cost()
+        self.total_cost += cost
+        
+        self.t += 1
+        if self.t+1 > TIME_HORIZON:
+            return
 
     def rl_env_step(self, action):
         "action here is an index"
@@ -287,7 +287,7 @@ class SupplyChain():
         )
         state = tuple(state)
 
-        # compute cost before 
+        # compute cost 
         cost = self.update_cost()
         self.total_cost += cost
 
@@ -303,5 +303,5 @@ class SupplyChain():
 
     def run(self, steps=TIME_HORIZON):
         for _ in range(steps):
-            self.step(verbosity=1)
+            self.simulation_step()
         return self.get_report(steps)
