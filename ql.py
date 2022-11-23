@@ -125,7 +125,14 @@ def ql_get_policy(env, Q):
 
     action_space_tuples = tuple(product((0,1,2,3), repeat=4))
 
-    policy = {}
+    policy = {
+        1: [],
+        2: [],
+        3: [],
+        4: [],
+        5: [],
+    }
+    
     # Reset the environment and pick the first action
     state = env.reset()
     for t in itertools.count():   
@@ -143,7 +150,7 @@ def ql_get_policy(env, Q):
 
         # Go to the next state
         state, reward, done, _ = env.step(action)
-        
+
         if done:
             break
 
