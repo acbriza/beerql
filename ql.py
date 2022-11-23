@@ -28,7 +28,7 @@ def make_epsilon_greedy_policy(Q, epsilon, nA):
     """
     def policy_fn(observation):
         A = np.ones(nA, dtype=float) * epsilon / nA #. set probability for other actions as epsilon/nA 
-        best_action = np.argmin(Q[observation]) #. observation is a 4-tuple 
+        best_action = np.argmax(Q[observation]) #. observation is a 4-tuple 
         A[best_action] += (1.0 - epsilon) #. set prob for best action as 1-epsilon
         return A
     return policy_fn
@@ -53,7 +53,8 @@ def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon_range=
     
     # The final action-value function.
     # A nested dictionary that maps state -> (action -> action-value).
-    Q = defaultdict(lambda: np.ones(env.action_space.n)*sys.maxsize)
+    # Q = defaultdict(lambda: np.ones(env.action_space.n)*sys.maxsize)
+    Q = defaultdict(lambda: np.zeros(env.action_space.n))
 
     # Keeps track of useful statistics
     stats = plotting.EpisodeStats(
@@ -88,7 +89,7 @@ def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon_range=
             # TD Update
             #. choose the best next action according to current Q-values of the next state
             #. update our target policy greedy pi 
-            best_next_action = np.argmin(Q[next_state])
+            best_next_action = np.argmax(Q[next_state])
             td_target = reward + discount_factor * Q[next_state][best_next_action]
             td_delta = td_target - Q[state][action]
             Q[state][action] += alpha * td_delta

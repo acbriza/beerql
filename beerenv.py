@@ -61,6 +61,7 @@ class BeerGameEnv(Env):
 
         # current state 
         self.state = (si, si, si, si)
+        return self.state
 
     def render(self, action, reward, obs):
         pass

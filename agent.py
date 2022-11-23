@@ -291,7 +291,7 @@ class SupplyChain():
         cost = self.update_cost()
         self.total_cost += cost
 
-        reward = cost
+        reward = -1*cost
 
         if self.t+1 > TIME_HORIZON:
             done = True
