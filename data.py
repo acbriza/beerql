@@ -1,4 +1,5 @@
 import pandas as pd
+import random
 
 DEMAND, LEAD  = 0, 1
 MAIN, PROB1, PROB2, PROB3 = 0, 1, 2, 3
@@ -47,4 +48,17 @@ RLCha08 = {
     3: list(df.Manufacturer.values),
     4: list(df.Supplier.values),
     5: [0]*35,
+}
+
+def get_uniform(choices, size, seed):
+    "returns a list of items from choices drawn with uniform probability"
+    random.seed(seed)
+    return [random.choice(choices) for i in range(size)]
+
+RAND_UNIFORM = {
+    1: get_uniform((0,1,2,3), 35, 1),
+    2: get_uniform((0,1,2,3), 35, 2),
+    3: get_uniform((0,1,2,3), 35, 3),
+    4: get_uniform((0,1,2,3), 35, 4),
+    5: get_uniform((0,1,2,3), 35, 5)
 }
