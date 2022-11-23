@@ -2,6 +2,7 @@ import sys
 
 from data import DEMAND, LEAD, TIME_HORIZON
 import numpy as np
+import pandas as pd
 from itertools import product
 
 class SCAgent():
@@ -182,6 +183,12 @@ class SupplyChain():
         report["Cost"] = {"cost": list(self.cost.values())[:steps+1],}
         return report
 
+    def get_report_df(self, report):
+        df = pd.DataFrame.from_dict(report, orient="index").stack().to_frame()
+        # to break out the lists into columns
+        df = pd.DataFrame(df[0].values.tolist(), index=df.index)
+        return df
+
     def get_rl_env_step_info(self, msg=""):
         info = {}
         info["Timestep"] = self.t
@@ -216,7 +223,8 @@ class SupplyChain():
         "computes accumulated cost up to current time step"
         return sum(list(self.cost.values()))
 
-    def simulation_step(self, verbosity=0):
+    def simulation_step(self, verbosity=0):        
+        self.t += 1
 
         # get lead and policy data
         lead = self.data[LEAD][self.t-1]        
@@ -244,9 +252,15 @@ class SupplyChain():
         cost = self.update_cost()
         self.total_cost += cost
         
-        self.t += 1
         if self.t+1 > TIME_HORIZON:
             return
+
+    def simultation_run(self, steps=TIME_HORIZON):
+        for _ in range(steps):
+            self.simulation_step()
+        report = self.get_report(steps)
+        df = self.get_report_df(report)
+        return df
 
     def rl_env_step(self, action):
         "action here is an index"
@@ -300,8 +314,3 @@ class SupplyChain():
             
         return state, reward, done, info
             
-
-    def run(self, steps=TIME_HORIZON):
-        for _ in range(steps):
-            self.simulation_step()
-        return self.get_report(steps)
