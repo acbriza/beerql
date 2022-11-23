@@ -28,12 +28,12 @@ def make_epsilon_greedy_policy(Q, epsilon, nA):
     """
     def policy_fn(observation):
         A = np.ones(nA, dtype=float) * epsilon / nA #. set probility for other actions as epsilon/nA 
-        best_action = np.argmax(Q[observation]) #. observation is a 4-tuple 
+        best_action = np.argmin(Q[observation]) #. observation is a 4-tuple 
         A[best_action] += (1.0 - epsilon) #. set prob for best action as 1-epsilon
         return A
     return policy_fn
 
-def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon=0.1):
+def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon_range=(0.98, 0.1)):
     """
     Q-Learning algorithm: Off-policy TD control. Finds the optimal greedy policy
     while following an epsilon-greedy policy
@@ -53,20 +53,26 @@ def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon=0.1):
     
     # The final action-value function.
     # A nested dictionary that maps state -> (action -> action-value).
-    Q = defaultdict(lambda: np.zeros(env.action_space.n))
+    Q = defaultdict(lambda: np.ones(env.action_space.n)*sys.maxsize)
 
     # Keeps track of useful statistics
     stats = plotting.EpisodeStats(
         episode_lengths=np.zeros(num_episodes),
         episode_rewards=np.zeros(num_episodes))    
     
-    # The policy we're following
-    policy = make_epsilon_greedy_policy(Q, epsilon, env.action_space.n)
-    
+    # make a list of epsilons linearly divided to the number of episodes
+    epsilons = np.linspace(epsilon_range[0], epsilon_range[1], num_episodes)
     for i_episode in range(num_episodes):
+        # The policy we're following
+        epsilon = epsilons[i_episode]
+        policy = make_epsilon_greedy_policy(Q, epsilon, env.action_space.n)
+
         # Print out which episode we're on, useful for debugging.
         if (i_episode + 1) % 100 == 0:
-            print("\rEpisode {}/{}.".format(i_episode + 1, num_episodes), end="")
+            print(f"Episode: {i_episode + 1}/{num_episodes}; \
+                    Prev Total Cost: {stats.episode_rewards[i_episode-1]}; \
+                    epsilon: {epsilon:.2f}."
+                ) #\r#end=""
             sys.stdout.flush()
         
         # Reset the environment and pick the first action
@@ -89,7 +95,7 @@ def q_learning(env, num_episodes, discount_factor=1.0, alpha=0.5, epsilon=0.1):
             # TD Update
             #. choose the best next action according to current Q-values of the next state
             #. update our target policy greedy pi 
-            best_next_action = np.argmax(Q[next_state])    
+            best_next_action = np.argmin(Q[next_state])
             td_target = reward + discount_factor * Q[next_state][best_next_action]
             td_delta = td_target - Q[state][action]
             Q[state][action] += alpha * td_delta
