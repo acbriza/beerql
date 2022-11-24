@@ -41,7 +41,7 @@ RLDummy = {
     5: [0]*35,
 }
 
-df = pd.read_excel("Cha08Solution.xlsx")
+df = pd.read_excel("data\Cha08Solution.xlsx")
 RLCha08 = {
     1: list(df.Retailer.values),
     2: list(df.Distributor.values),
