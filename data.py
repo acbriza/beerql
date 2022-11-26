@@ -1,5 +1,6 @@
 import pandas as pd
 import random
+import os
 
 DEMAND, LEAD  = 0, 1
 MAIN, PROB1, PROB2, PROB3 = 0, 1, 2, 3
@@ -41,7 +42,7 @@ RLDummy = {
     5: [0]*35,
 }
 
-df = pd.read_excel("data\Cha08Solution.xlsx")
+df = pd.read_excel(os.path.join("data","Cha08Solution.xlsx"))
 RLCha08 = {
     1: list(df.Retailer.values),
     2: list(df.Distributor.values),
