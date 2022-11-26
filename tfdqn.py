@@ -1,5 +1,6 @@
-""" See this tutorial: 
-https://colab.research.google.com/github/tensorflow/agents/blob/master/docs/tutorials/1_dqn_tutorial.ipynb#scrollTo=sMitx5qSgJk1
+""" See this tutorials below on environments[1] and [DQN]
+[1] https://www.tensorflow.org/agents/tutorials/2_environments_tutorial
+[2] https://colab.research.google.com/github/tensorflow/agents/blob/master/docs/tutorials/1_dqn_tutorial.ipynb#scrollTo=sMitx5qSgJk1
 """
 
 # Environment Definition
@@ -120,9 +121,6 @@ def validate_environment():
     utils.validate_py_environment(environment, episodes=3)
 
 def test_run_environment():
-    environment = BeerGamePyEnv()
-    utils.validate_py_environment(environment, episodes=3)
-    # run 1 complete episode + 1 time step to confirm episode ended
     action = np.array(0, dtype=np.int32)
 
     environment = BeerGamePyEnv()
@@ -131,11 +129,11 @@ def test_run_environment():
     print(time_step)
     cumulative_reward = time_step.reward
 
+    # run 1 complete episode + 1 time step to confirm episode ended
     for i in range(36):
         time_step = environment.step(i)
         print(time_step)
         cumulative_reward += time_step.reward
-
         print('Final Reward = ', cumulative_reward)    
 
 def get_dqn_agent(
