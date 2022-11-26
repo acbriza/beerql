@@ -136,12 +136,9 @@ def test_run_environment():
         cumulative_reward += time_step.reward
         print('Final Reward = ', cumulative_reward)    
 
-def get_dqn_agent(
-    fc_layer_params, 
-    learning_rate,
-):
+def get_dqn_agent(fc_layer_params, learning_rate):
     env = BeerGamePyEnv()
-    env = TimeLimit(env,35)
+    env = TimeLimit(env, data.TIME_HORIZON) # this wrapping is needed in a function below that uses env
 
     train_py_env = BeerGamePyEnv()
     eval_py_env = BeerGamePyEnv()
@@ -245,7 +242,7 @@ def train(
 
     random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(),
                                                     train_env.action_spec())
-
+    # DATA COLLECTION
     py_driver.PyDriver(
         env,
         py_tf_eager_policy.PyTFEagerPolicy(
@@ -260,6 +257,7 @@ def train(
 
     iterator = iter(dataset)
 
+    # TRAINING
     # (Optional) Optimize by wrapping some of the code in a graph using TF function.
     agent.train = common.function(agent.train)
 
