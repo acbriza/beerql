@@ -308,9 +308,10 @@ class SupplyChain():
                     self.agents[i].txn["inventory"][self.t]
                 ) for i in [0,1,2,3]
             )
-            state = tuple(state)
         else:
             state = (self.agents[i].txn["inventory"][self.t] for i in [0,1,2,3])
+        # convert state to a tuple (from being a generator)
+        state = tuple(state)
 
 
         # compute cost 
