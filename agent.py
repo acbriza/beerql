@@ -266,8 +266,12 @@ class SupplyChain():
         df = self.get_report_df(report)
         return df
 
-    def rl_env_step(self, action):
-        "action here is an index"
+    def rl_env_step(self, action, discretized_states=True):
+        """ action: integer 
+                An index representing an action
+            disctredized_states: boolean
+                Whether the tuples representing states have to be discretized
+        """
 
         # convert action index parameter to a 4-tuple
         action = self.action_space_tuples[action]
@@ -297,13 +301,17 @@ class SupplyChain():
 
         self.agents[4].process_orders_source()
 
-        # encode new state
-        state = (
-            self.encode_value(
-                self.agents[i].txn["inventory"][self.t]
-             ) for i in [0,1,2,3]
-        )
-        state = tuple(state)
+        if discretized_states:
+            # for Q-Learning, new state has to be encoded
+            state = (
+                self.encode_value(
+                    self.agents[i].txn["inventory"][self.t]
+                ) for i in [0,1,2,3]
+            )
+            state = tuple(state)
+        else:
+            state = (self.agents[i].txn["inventory"][self.t] for i in [0,1,2,3])
+
 
         # compute cost 
         cost = self.update_cost()
