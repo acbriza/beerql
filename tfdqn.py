@@ -1,29 +1,29 @@
+""" See this tutorial: 
+https://colab.research.google.com/github/tensorflow/agents/blob/master/docs/tutorials/1_dqn_tutorial.ipynb#scrollTo=sMitx5qSgJk1
+"""
+
 # Environment Definition
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import, division, print_function
 
-import abc
-import tensorflow as tf
-import numpy as np
-
 from tf_agents.environments import py_environment
-from tf_agents.environments import tf_environment
+#. from tf_agents.environments import tf_environment
 from tf_agents.environments import tf_py_environment
 from tf_agents.environments import utils
-from tf_agents.environments import wrappers
-from tf_agents.environments import suite_gym
+#. from tf_agents.environments import wrappers
+#. from tf_agents.environments import suite_gym
 from tf_agents.trajectories import time_step as ts
 from tf_agents.specs import array_spec
 
-import base64
-import imageio
-import IPython
-import matplotlib
+#. import base64
+#. import imageio
+#. import IPython
+#. import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import PIL.Image
+#. import PIL.Image
 import pyvirtualdisplay
 import reverb
 
@@ -45,10 +45,11 @@ from tf_agents.trajectories import trajectory
 from tf_agents.specs import tensor_spec
 from tf_agents.utils import common
 
-from tf_agents.environments import TimeLimit #add this for wrapping custom environment as TimeLimit
+#. add import below for wrapping custom environment as TimeLimit
+from tf_agents.environments import TimeLimit 
 
+#. our modules
 from agent import SupplyChain
-import numpy as np
 import data
 
 class BeerGamePyEnv(py_environment.PyEnvironment):
@@ -57,7 +58,8 @@ class BeerGamePyEnv(py_environment.PyEnvironment):
     self._action_spec = array_spec.BoundedArraySpec(
         shape=(), dtype=np.int32, minimum=0, maximum=255, name='action')
     
-    intmax, intmin = np.iinfo(np.int32).max, np.iinfo(np.int32).min
+    intmax = np.iinfo(np.int32).max
+    intmin = np.iinfo(np.int32).min
     self._observation_spec = array_spec.BoundedArraySpec(
         shape=(4,), 
         dtype=np.int32, 
@@ -101,8 +103,7 @@ class BeerGamePyEnv(py_environment.PyEnvironment):
       # a new episode.
       return self.reset()
     
-    obs, reward, done, info = self.sc.rl_env_step(action) 
-    #.d print(">",action,reward,obs)
+    obs, reward, done, info = self.sc.rl_env_step(action, discretized_states=False)
     self._episode_ended = done
     self._state = obs
     self._cumulative_reward += reward
