@@ -198,7 +198,7 @@ def make_epsilon_greedy_policy(estimator, nA):
         return A
     return policy_fn        
 
-    def deep_q_learning(sess,
+def deep_q_learning(sess,
                     env,
                     q_estimator,
                     target_estimator,
