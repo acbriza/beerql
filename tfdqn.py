@@ -49,6 +49,9 @@ from tf_agents.utils import common
 #. add import below for wrapping custom environment as TimeLimit
 from tf_agents.environments import TimeLimit 
 
+#. standard python 
+from itertools import product
+
 #. our modules
 from agent import SupplyChain
 import data
@@ -297,7 +300,7 @@ def train(
             print('step = {0}: Average Return = {1}'.format(step, avg_return))
             returns.append(avg_return)    
 
-    return returns
+    return returns, agent.policy
 
 
 def plot_returns(returns, num_iterations, eval_interval):
@@ -305,3 +308,55 @@ def plot_returns(returns, num_iterations, eval_interval):
     plt.plot(iterations, returns)
     plt.ylabel('Average Return')
     plt.xlabel('Episodes')    
+
+
+def dqn_get_policy(environment, policy):
+    """    
+    Args:
+        environment:  
+        policy:     
+    Returns:
+        policy: A dictionary containing list of actions per agent
+        cumulative_returns: Cumulative returns of following the policy
+    """
+
+    action_space_tuples = tuple(product((0,1,2,3), repeat=4))
+
+    policy_dict = {i:[] for i in range(1,6)}
+    observations_dict = {i:[] for i in range(4)}
+
+    time_step = environment.reset()
+    # define variable to track total returns received thus far
+    episode_return = 0.0
+    # define list to contain cumulative returns
+    cumulative_returns = []
+    while not time_step.is_last():
+        # take a step using action
+        action_step = policy.action(time_step)
+
+        action = int(action_step.action)
+        #convert action (integer 1..256) to a 4-tuple
+        action_tuple = action_space_tuples[action]
+
+        #update policy
+        policy_dict[1].append(action_tuple[0])
+        policy_dict[2].append(action_tuple[1])
+        policy_dict[3].append(action_tuple[2])
+        policy_dict[4].append(action_tuple[3])
+        policy_dict[5].append(0)
+
+        # execute action to get the observation and rewards
+        time_step = environment.step(action_step.action)
+
+        # update observations
+        obs = np.array(time_step.observation).reshape(-1)
+        observations_dict[0].append(obs[0])
+        observations_dict[1].append(obs[1])
+        observations_dict[2].append(obs[2])
+        observations_dict[3].append(obs[3])
+
+        # update returns variables
+        episode_return += time_step.reward
+        cumulative_returns.append(episode_return)
+
+    return policy_dict, observations_dict, cumulative_returns
